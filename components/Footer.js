@@ -382,7 +382,7 @@ const Footer = () => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isQuoteModalOpen, closeQuoteModal]);
 
-  if (pathName.startsWith("/dashboard") || pathName === ("schedule") || pathName === ("login")) {
+  if (pathName.startsWith("/dashboard") || pathName === "/schedule" || pathName === "/login") {
     return null;
   }
 

@@ -26,6 +26,18 @@ export default function LeadsClient() {
   const [convertDates, setConvertDates] = useState({});
   const [showConvertModal, setShowConvertModal] = useState(null);
   const [convertedCount, setConvertedCount] = useState(0);
+  const [editingLead, setEditingLead] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    services: "",
+    requirement: "",
+    budget: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [isUpdatingLead, setIsUpdatingLead] = useState(false);
+  const [deletingLeadId, setDeletingLeadId] = useState(null);
 
   const serviceListPreview = useMemo(() => {
     return formData.services
@@ -186,6 +198,98 @@ export default function LeadsClient() {
     }
   }
 
+  function openEditModal(lead) {
+    setEditingLead(lead);
+    setEditForm({
+      name: lead?.name || "",
+      email: lead?.email || "",
+      phone: lead?.phone || "",
+      services: (lead?.services || []).join(", "),
+      requirement: lead?.requirement || "",
+      budget: lead?.budget || "",
+    });
+    setEditError("");
+  }
+
+  function onEditFieldChange(event) {
+    const { name, value } = event.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleUpdateLead() {
+    if (!editingLead?._id) return;
+
+    const services = editForm.services
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (services.length === 0) {
+      setEditError("Please provide at least one service.");
+      return;
+    }
+
+    setIsUpdatingLead(true);
+    setEditError("");
+
+    try {
+      const response = await fetch(`/api/leads/${editingLead._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          email: editForm.email,
+          phone: editForm.phone,
+          services,
+          requirement: editForm.requirement,
+          budget: editForm.budget,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update lead");
+      }
+
+      toast.success("Lead updated successfully.");
+      setEditingLead(null);
+      await loadLeads();
+    } catch (err) {
+      setEditError(err.message || "Failed to update lead");
+    } finally {
+      setIsUpdatingLead(false);
+    }
+  }
+
+  async function handleDeleteLead(lead) {
+    if (!lead?._id) return;
+
+    const confirmed = window.confirm("Delete this lead? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setDeletingLeadId(lead._id);
+
+    try {
+      const response = await fetch(`/api/leads/${lead._id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete lead");
+      }
+
+      toast.success("Lead deleted successfully.");
+      await loadLeads();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete lead");
+    } finally {
+      setDeletingLeadId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -293,7 +397,7 @@ export default function LeadsClient() {
                     <col className="w-[20%]" />
                     <col className="w-[14%]" />
                     <col className="w-[18%]" />
-                    <col className="w-[8%]" />
+                    <col className="w-[10%]" />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-cyan-500/20 text-cyan-200">
@@ -331,18 +435,39 @@ export default function LeadsClient() {
                         <td className="py-2 pr-2 uppercase break-words whitespace-normal">{lead.source}</td>
                         <td className="py-2 break-words whitespace-normal">{new Date(lead.createdAt).toLocaleString()}</td>
                         <td className="py-2">
-                          {!lead.convertedToClient ? (
+                          <div className="flex flex-col gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setShowConvertModal(lead._id)}
+                              onClick={() => openEditModal(lead)}
                               className="text-xs h-7"
                             >
-                              Convert
+                              Edit
                             </Button>
-                          ) : (
-                            <span className="text-xs text-emerald-400">Done</span>
-                          )}
+                            {!lead.convertedToClient ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowConvertModal(lead._id)}
+                                className="text-xs h-7"
+                              >
+                                Convert
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" className="text-xs h-7" disabled>
+                                Converted
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteLead(lead)}
+                              className="text-xs h-7"
+                              disabled={deletingLeadId === lead._id}
+                            >
+                              {deletingLeadId === lead._id ? "Deleting..." : "Delete"}
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -493,6 +618,85 @@ export default function LeadsClient() {
                   disabled={convertingLeadId === showConvertModal}
                 >
                   {convertingLeadId === showConvertModal ? "Converting..." : "Convert & Create"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {editingLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle>Edit Lead</CardTitle>
+              <CardDescription>Update lead details</CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input name="name" value={editForm.name} onChange={onEditFieldChange} required />
+              </div>
+
+              <div>
+                <Label>Email</Label>
+                <Input name="email" type="email" value={editForm.email} onChange={onEditFieldChange} required />
+              </div>
+
+              <div>
+                <Label>Phone</Label>
+                <Input name="phone" value={editForm.phone} onChange={onEditFieldChange} required />
+              </div>
+
+              <div>
+                <Label>Services (comma separated)</Label>
+                <Input
+                  name="services"
+                  value={editForm.services}
+                  onChange={onEditFieldChange}
+                  placeholder="Web Development, UI/UX Design"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Budget</Label>
+                <Input name="budget" value={editForm.budget} onChange={onEditFieldChange} placeholder="Optional" />
+              </div>
+
+              <div>
+                <Label>Requirement</Label>
+                <textarea
+                  name="requirement"
+                  value={editForm.requirement}
+                  onChange={onEditFieldChange}
+                  rows={4}
+                  className="w-full rounded-md border border-cyan-500/30 bg-black/60 px-3 py-2 text-sm text-cyan-100"
+                  placeholder="Optional details"
+                />
+              </div>
+
+              {editError && <p className="text-sm text-red-400">{editError}</p>}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setEditingLead(null);
+                    setEditError("");
+                  }}
+                  disabled={isUpdatingLead}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleUpdateLead}
+                  disabled={isUpdatingLead}
+                >
+                  {isUpdatingLead ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </CardContent>

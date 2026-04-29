@@ -919,11 +919,9 @@ export default function TicketsPage() {
             value={createForm.priority}
             onChange={(e) => setCreateForm((c) => ({ ...c, priority: e.target.value }))}
           >
-            <div className="bg-black ">
             <option value="low" className="text-black">🟢 Low priority</option>
             <option value="medium" className="text-black">🟡 Medium priority</option>
             <option value="high" className="text-black">🔴 High priority</option>
-            </div>
           </select>
 
           {isAdmin ? (

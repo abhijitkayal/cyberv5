@@ -8,15 +8,19 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 
 // You can replace these with real user/role data as needed
 export default function CalendarPage() {
-  const mockUser = { name: "User", email: "user@email.com", avatar: "/logo2.png" };
+  const mockUser = { name: "Admin User", email: "admin@gmail.com", avatar: "/logo2.png" };
   const mockRole = "admin";
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background text-foreground">
+      <div className="flex min-h-screen bg-background text-foreground w-full">
         <AppSidebar role={mockRole} user={mockUser} />
         <div className="flex flex-col flex-1 min-w-0">
-          <SiteHeader title="Schedule" subtitle="Calendar" />
-          <main className="flex-1 p-4 lg:p-6 w-290">
+          <SiteHeader
+            title="Schedule"
+            subtitle="Calendar"
+            contentClassName="pl-0 pr-4 lg:pr-6"
+          />
+          <main className="flex-1 w-full py-4 pr-4 pl-0 lg:py-6 lg:pr-6 lg:pl-0 overflow-x-hidden">
             <Calendar events={events} eventDates={eventDates} />
           </main>
         </div>

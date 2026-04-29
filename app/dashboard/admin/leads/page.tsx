@@ -13,9 +13,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { StatCards } from "./component/stats-card"
 // import { DataTable } from "../admin/clients/component/data-table"
 import { toast } from "sonner"
+import { MoreVertical } from "lucide-react"
 
 interface User {
   _id?: string
@@ -63,9 +71,7 @@ const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [stats, setStats] = useState({ totalClients: 0, convertedFromLeads: 0, activeClients: 0 });
   const [editingClient, setEditingClient] = useState(null);
-  const [editForm, setEditForm] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [editError, setEditError] = useState("");
 
 //   async function loadClients() {
 //     try {
@@ -186,6 +192,7 @@ const [formData, setFormData] = useState({
     services: "",
     requirement: "",
     budget: "",
+  source: "manual-admin",
   });
 
   const [leads, setLeads] = useState([]);
@@ -197,6 +204,18 @@ const [formData, setFormData] = useState({
   const [convertDates, setConvertDates] = useState({});
   const [showConvertModal, setShowConvertModal] = useState(null);
   const [convertedCount, setConvertedCount] = useState(0);
+  const [editingLead, setEditingLead] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    services: "",
+    requirement: "",
+    budget: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [isUpdatingLead, setIsUpdatingLead] = useState(false);
+  const [deletingLeadId, setDeletingLeadId] = useState(null);
 
   const serviceListPreview = useMemo(() => {
     return formData.services
@@ -263,7 +282,6 @@ const [formData, setFormData] = useState({
         body: JSON.stringify({
           ...formData,
           services,
-          source: "manual-admin",
         }),
       });
 
@@ -281,6 +299,7 @@ const [formData, setFormData] = useState({
         services: "",
         requirement: "",
         budget: "",
+        source: "manual-admin",
       });
 
       await loadLeads();
@@ -358,6 +377,98 @@ const [formData, setFormData] = useState({
     }
   }
 
+  function openEditModal(lead) {
+    setEditingLead(lead);
+    setEditForm({
+      name: lead?.name || "",
+      email: lead?.email || "",
+      phone: lead?.phone || "",
+      services: (lead?.services || []).join(", "),
+      requirement: lead?.requirement || "",
+      budget: lead?.budget || "",
+    });
+    setEditError("");
+  }
+
+  function onEditFieldChange(event) {
+    const { name, value } = event.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleUpdateLead() {
+    if (!editingLead?._id) return;
+
+    const services = editForm.services
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (services.length === 0) {
+      setEditError("Please provide at least one service.");
+      return;
+    }
+
+    setIsUpdatingLead(true);
+    setEditError("");
+
+    try {
+      const response = await fetch(`/api/leads/${editingLead._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          email: editForm.email,
+          phone: editForm.phone,
+          services,
+          requirement: editForm.requirement,
+          budget: editForm.budget,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update lead");
+      }
+
+      toast.success("Lead updated successfully.");
+      setEditingLead(null);
+      await loadLeads();
+    } catch (err) {
+      setEditError(err.message || "Failed to update lead");
+    } finally {
+      setIsUpdatingLead(false);
+    }
+  }
+
+  async function handleDeleteLead(lead) {
+    if (!lead?._id) return;
+
+    const confirmed = window.confirm("Delete this lead? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setDeletingLeadId(lead._id);
+
+    try {
+      const response = await fetch(`/api/leads/${lead._id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete lead");
+      }
+
+      toast.success("Lead deleted successfully.");
+      await loadLeads();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete lead");
+    } finally {
+      setDeletingLeadId(null);
+    }
+  }
+
   const handleEditUser = (user: User) => {
     // For now, just log the user to edit
     // In a real app, you'd open an edit dialog
@@ -378,7 +489,7 @@ const [formData, setFormData] = useState({
             </Button>
           </DialogTrigger>
           </div>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="">
               <DialogTitle className="sr-only">Add Lead</DialogTitle>
             </DialogHeader>
@@ -419,6 +530,18 @@ const [formData, setFormData] = useState({
                               {serviceListPreview.length > 0 && (
                                 <p className="mt-2 text-xs text-green-400">Selected: {serviceListPreview.join(", ")}</p>
                               )}
+                            </div>
+
+                            <div>
+                              <Label className="">Source</Label>
+                              <Input
+                                name="source"
+                                value={formData.source}
+                                onChange={onFieldChange}
+                                placeholder="manual-admin"
+                                className=""
+                                required
+                              />
                             </div>
               
                             <div>
@@ -500,18 +623,35 @@ const [formData, setFormData] = useState({
                                            <td className="py-2 pr-2 uppercase break-words whitespace-normal">{lead.source}</td>
                                            <td className="py-2 break-words whitespace-normal">{new Date(lead.createdAt).toLocaleString()}</td>
                                            <td className="py-2">
-                                             {!lead.convertedToClient ? (
-                                               <Button
-                                                 size="sm"
-                                                 variant="outline"
-                                                 onClick={() => setShowConvertModal(lead._id)}
-                                                 className="text-xs h-7"
-                                               >
-                                                 Convert
-                                               </Button>
-                                             ) : (
-                                               <span className="text-xs text-emerald-400">Done</span>
-                                             )}
+                                             <DropdownMenu>
+                                               <DropdownMenuTrigger asChild>
+                                                 <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                   <MoreVertical className="size-4" />
+                                                   <span className="sr-only">Open actions</span>
+                                                 </Button>
+                                               </DropdownMenuTrigger>
+                                               <DropdownMenuContent align="end">
+                                                 <DropdownMenuItem className="cursor-pointer" onClick={() => openEditModal(lead)}>
+                                                   Edit
+                                                 </DropdownMenuItem>
+                                                 {!lead.convertedToClient ? (
+                                                   <DropdownMenuItem className="cursor-pointer" onClick={() => setShowConvertModal(lead._id)}>
+                                                     Convert
+                                                   </DropdownMenuItem>
+                                                 ) : (
+                                                   <DropdownMenuItem disabled>Converted</DropdownMenuItem>
+                                                 )}
+                                                 <DropdownMenuSeparator />
+                                                 <DropdownMenuItem
+                                                   variant="destructive"
+                                                   className="cursor-pointer"
+                                                   onClick={() => handleDeleteLead(lead)}
+                                                   disabled={deletingLeadId === lead._id}
+                                                 >
+                                                   {deletingLeadId === lead._id ? "Deleting..." : "Delete"}
+                                                 </DropdownMenuItem>
+                                               </DropdownMenuContent>
+                                             </DropdownMenu>
                                            </td>
                                          </tr>
                                        ))}
@@ -669,6 +809,84 @@ const [formData, setFormData] = useState({
                           disabled={convertingLeadId === showConvertModal}
                         >
                           {convertingLeadId === showConvertModal ? "Converting..." : "Convert & Create"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              {editingLead && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                  <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <CardHeader className="">
+                      <CardTitle className="">Edit Lead</CardTitle>
+                      <CardDescription className="">Update lead details</CardDescription>
+                    </CardHeader>
+        
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="">Name</Label>
+                        <Input name="name" value={editForm.name} onChange={onEditFieldChange} required />
+                      </div>
+        
+                      <div>
+                        <Label className="">Email</Label>
+                        <Input name="email" type="email" value={editForm.email} onChange={onEditFieldChange} required />
+                      </div>
+        
+                      <div>
+                        <Label className="">Phone</Label>
+                        <Input name="phone" value={editForm.phone} onChange={onEditFieldChange} required />
+                      </div>
+        
+                      <div>
+                        <Label className="">Services (comma separated)</Label>
+                        <Input
+                          name="services"
+                          value={editForm.services}
+                          onChange={onEditFieldChange}
+                          placeholder="Web Development, UI/UX Design"
+                          required
+                        />
+                      </div>
+        
+                      <div>
+                        <Label className="">Budget</Label>
+                        <Input name="budget" value={editForm.budget} onChange={onEditFieldChange} placeholder="Optional" />
+                      </div>
+        
+                      <div>
+                        <Label className="">Requirement</Label>
+                        <textarea
+                          name="requirement"
+                          value={editForm.requirement}
+                          onChange={onEditFieldChange}
+                          rows={4}
+                          className="w-full rounded-md border border-gray-400/30 bg-transparent px-3 py-2 text-sm text-gray-500"
+                          placeholder="Optional details"
+                        />
+                      </div>
+        
+                      {editError && <p className="text-sm text-red-400">{editError}</p>}
+        
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => {
+                            setEditingLead(null);
+                            setEditError("");
+                          }}
+                          disabled={isUpdatingLead}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          className="flex-1"
+                          onClick={handleUpdateLead}
+                          disabled={isUpdatingLead}
+                        >
+                          {isUpdatingLead ? "Saving..." : "Save Changes"}
                         </Button>
                       </div>
                     </CardContent>

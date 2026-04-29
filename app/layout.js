@@ -219,6 +219,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { ThemeProvider } from "next-themes";
 
 const GTM_ID = "GTM-KCNJRZVR";
 
@@ -317,24 +318,26 @@ export default function RootLayout({ children }) {
           />
         </noscript>
 
-        <SessionProvider>
-          <NotificationProvider>
-            {loading && (
-              <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
-                <Loader />
-              </div>
-            )}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProvider>
+            <NotificationProvider>
+              {loading && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
+                  <Loader />
+                </div>
+              )}
 
-            {!loading && (
-              <div className="relative min-h-screen flex flex-col">
-                <Navbar />
-                <main className="flex-1 relative z-10">{children}</main>
-                <Footer />
-                <BackToTopButton />
-              </div>
-            )}
-          </NotificationProvider>
-        </SessionProvider>
+              {!loading && (
+                <div className="relative min-h-screen flex flex-col">
+                  <Navbar />
+                  <main className="flex-1 relative z-10">{children}</main>
+                  <Footer />
+                  <BackToTopButton />
+                </div>
+              )}
+            </NotificationProvider>
+          </SessionProvider>
+        </ThemeProvider>
 
         <Analytics />
         <SpeedInsights />

@@ -150,7 +150,7 @@ const getEventsForDay = (date: Date) => {
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 min-h-[600px]">
+        <div className="grid grid-cols-7 w-full flex-1">
           {calendarDays.map((day) => {
             const dayEvents = getEventsForDay(day)
             const isCurrentMonth = isSameMonth(day, currentDate)
@@ -210,8 +210,8 @@ const getEventsForDay = (date: Date) => {
   
 
   return (
-    <div className="border rounded-lg bg-background text-foreground relative">
-      <div className="flex min-h-[800px]">
+    <div className="w-full flex border rounded-lg bg-background text-foreground relative overflow-x-hidden">
+      <div className="flex min-h-[800px] w-full">
         {/* Desktop Sidebar */}
         {/* <div className="hidden xl:block w-80 flex-shrink-0">
           {renderSidebar()}

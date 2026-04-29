@@ -220,6 +220,71 @@ export async function POST(request) {
 }
 
 // ===============================
+// UPDATE USER
+// ===============================
+export async function PATCH(request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user || session.user.role !== "admin") {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { userId, name, email, phone, source, status } = body;
+
+    if (!userId) {
+      return Response.json({ error: "User ID required" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const nextEmail = typeof email === "string" ? email.toLowerCase().trim() : user.email;
+    if (nextEmail !== user.email) {
+      const duplicate = await User.findOne({ email: nextEmail, _id: { $ne: userId } });
+      if (duplicate) {
+        return Response.json({ error: "Another user already uses this email" }, { status: 409 });
+      }
+    }
+
+    const nextStatus = status === "inactive" ? false : true;
+
+    const updates = {
+      ...(typeof name === "string" ? { name: name.trim() } : {}),
+      email: nextEmail,
+      ...(typeof phone === "string" ? { phone: phone.trim() } : {}),
+      ...(typeof source === "string" ? { source: source.trim() || "manual-admin" } : {}),
+      isActive: nextStatus,
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true }).select("-passwordHash");
+
+    if (updatedUser?.clientProfile) {
+      await Client.findByIdAndUpdate(updatedUser.clientProfile, {
+        ...(typeof name === "string" ? { name: name.trim() } : {}),
+        email: nextEmail,
+        ...(typeof phone === "string" ? { phone: phone.trim() } : {}),
+        ...(typeof source === "string" ? { source: source.trim() || "manual-admin" } : {}),
+        status: nextStatus ? "active" : "inactive",
+      });
+    }
+
+    return Response.json({
+      user: updatedUser,
+      message: "User updated successfully",
+    }, { status: 200 });
+  } catch (err) {
+    console.error("PATCH users error:", err);
+    return Response.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+// ===============================
 // DELETE USER
 // ===============================
 export async function DELETE(request) {

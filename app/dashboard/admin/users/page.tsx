@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { StatCards } from "./component/stats-card"
 import { DataTable } from "./component/data-table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreVertical, Pencil, Trash2 } from "lucide-react"
 
 interface User {
   _id?: string
@@ -26,7 +28,10 @@ interface User {
   plan?: string
   billing?: string
   status?: string
+  phone?: string
+  source?: string
   isActive?: boolean
+  clientProfile?: any
   joinedDate?: string
   lastLogin?: string
 }
@@ -59,6 +64,14 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [userEditForm, setUserEditForm] = useState<any>({})
+  const [isUserSaving, setIsUserSaving] = useState(false)
+  const [userEditError, setUserEditError] = useState("")
+  const userStatusStyles = {
+    active: "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300",
+    inactive: "border-slate-200 bg-slate-500/10 text-slate-700 dark:border-slate-500/30 dark:bg-slate-500/15 dark:text-slate-300",
+  }
 
   // Fetch users from API
   useEffect(() => {
@@ -164,9 +177,66 @@ export default function UsersPage() {
   }
 
   const handleEditUser = (user: User) => {
-    // For now, just log the user to edit
-    // In a real app, you'd open an edit dialog
-    console.log("Edit user:", user)
+    setEditingUser(user)
+    setUserEditForm({
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      source: user.source || "manual-admin",
+      status: user.status || (user.isActive ? "active" : "inactive"),
+    })
+    setUserEditError("")
+  }
+
+  const closeUserEdit = () => {
+    setEditingUser(null)
+    setUserEditForm({})
+    setUserEditError("")
+  }
+
+  const handleSaveUserEdit = async () => {
+    if (!userEditForm.name || !userEditForm.email) {
+      setUserEditError("Name and email are required.")
+      return
+    }
+
+    setIsUserSaving(true)
+    setUserEditError("")
+
+    try {
+      const response = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: editingUser?._id || editingUser?.id,
+          name: userEditForm.name,
+          email: userEditForm.email,
+          phone: userEditForm.phone,
+          source: userEditForm.source,
+          status: userEditForm.status,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update user")
+      }
+
+      setUsers((currentUsers) =>
+        currentUsers.map((currentUser) =>
+          (currentUser._id || currentUser.id) === (editingUser?._id || editingUser?.id)
+            ? { ...currentUser, ...data.user }
+            : currentUser
+        )
+      )
+
+      setMessage("User updated successfully.")
+      closeUserEdit()
+    } catch (err: any) {
+      setUserEditError(err.message || "Failed to save changes")
+    } finally {
+      setIsUserSaving(false)
+    }
   }
 
   return (
@@ -183,7 +253,7 @@ export default function UsersPage() {
             </Button>
           </DialogTrigger>
           </div>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle className="sr-only">Create User</DialogTitle>
             </DialogHeader>
@@ -373,7 +443,7 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
         {/* ========================= USERS TABLE ========================= */}
-        <Card>
+        <Card className="border border-border bg-card text-card-foreground shadow-sm">
           <CardHeader>
             <CardTitle>Users</CardTitle>
             <CardDescription>
@@ -384,41 +454,76 @@ export default function UsersPage() {
             {loading ? (
               <p className="text-gray-400">Loading users...</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-xl border border-border/60 bg-background">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-cyan-500/20 text-black-200">
-                      <th className="py-2">Name</th>
-                      <th className="py-2">Email</th>
-                      <th className="py-2">Role</th>
-                      <th className="py-2">Source</th>
-                      <th className="py-2">Status</th>
-                      <th className="py-2 text-right">Action</th>
+                    <tr className="border-b border-border/70 bg-muted/30 text-foreground/80">
+                      <th className="py-3 pl-3">Name</th>
+                      <th className="py-3">Email</th>
+                      <th className="py-3">Role</th>
+                      <th className="py-3">Source</th>
+                      <th className="py-3">Status</th>
+                      <th className="py-3 pr-3 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((user) => (
                       <tr
                         key={user._id || user.id}
-                        className="border-b border-cyan-500/10"
+                        className="border-b border-border/60 align-top hover:bg-muted/40 transition-colors"
                       >
-                        <td className="py-2">{user.name}</td>
-                        <td className="py-2">{user.email}</td>
-                        <td className="py-2 uppercase">{user.role}</td>
-                        {/* <td className="py-2">{user.source}</td> */}
-                        <td className="py-2">
-                          {user.isActive ? "Active" : "Disabled"}
+                        <td className="py-3 pl-3">{user.name}</td>
+                        <td className="py-3">{user.email}</td>
+                        <td className="py-3 uppercase">{user.role}</td>
+                        <td className="py-3">
+                          {(() => {
+                            const sourceValue = String(user.source || "manual-admin").trim()
+                            const isLeadSource = sourceValue.toLowerCase() === "lead-conversion"
+                            const isManualSource = sourceValue.toLowerCase() === "manual-admin"
+                            const sourceLabel = isLeadSource ? "From Lead" : isManualSource ? "Manual" : sourceValue
+
+                            return (
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                isLeadSource
+                                  ? "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300"
+                                  : isManualSource
+                                    ? "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/15 dark:text-blue-300"
+                                    : "border-slate-200 bg-slate-500/10 text-slate-700 dark:border-slate-500/30 dark:bg-slate-500/15 dark:text-slate-300"
+                              }`}>
+                                {sourceLabel || "Manual"}
+                              </span>
+                            )
+                          })()}
                         </td>
-                        <td className="py-2 text-right">
-                          {/* prevent deleting admin */}
-                          {user.role !== "admin" && (
-                            <button
-                              onClick={() => handleDeleteUser(user._id || user.id)}
-                              className="text-red-400 hover:text-red-600 text-sm"
-                            >
-                              Delete
-                            </button>
-                          )}
+                        <td className="py-3">
+                          {(() => {
+                            const status = String(user.status || (user.isActive ? "active" : "inactive")).toLowerCase()
+                            const statusClass = userStatusStyles[status] || userStatusStyles.inactive
+                            return (
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${statusClass}`}>
+                                {status}
+                              </span>
+                            )
+                          })()}
+                        </td>
+                        <td className="py-3 pr-3 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36 border-border bg-popover text-popover-foreground">
+                              <DropdownMenuItem onClick={() => handleEditUser(user)} className="cursor-pointer gap-2">
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteUser(user._id || user.id)} className="cursor-pointer gap-2 text-red-500 focus:text-red-500">
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     ))}
@@ -432,6 +537,64 @@ export default function UsersPage() {
           </CardContent>
         </Card>
       </div>
+
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-xl max-h-[90vh] overflow-y-auto border border-border bg-card text-card-foreground shadow-2xl">
+            <CardHeader>
+              <CardTitle>Edit User</CardTitle>
+              <CardDescription>Update the selected user details.</CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input value={userEditForm.name || ""} onChange={(e) => setUserEditForm({ ...userEditForm, name: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={userEditForm.email || ""} onChange={(e) => setUserEditForm({ ...userEditForm, email: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Phone</Label>
+                  <Input value={userEditForm.phone || ""} onChange={(e) => setUserEditForm({ ...userEditForm, phone: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <select
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    value={userEditForm.status || "active"}
+                    onChange={(e) => setUserEditForm({ ...userEditForm, status: e.target.value })}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Source</Label>
+                <Input value={userEditForm.source || ""} onChange={(e) => setUserEditForm({ ...userEditForm, source: e.target.value })} />
+              </div>
+
+              {userEditError && <p className="text-sm text-red-400">{userEditError}</p>}
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="flex-1" onClick={closeUserEdit} disabled={isUserSaving}>
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={handleSaveUserEdit} disabled={isUserSaving}>
+                  {isUserSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

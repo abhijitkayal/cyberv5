@@ -31,6 +31,13 @@ export function AppSidebar({
         ? "/dashboard/employee"
         : "/dashboard/client"
 
+  const projectsPath =
+    normalizedRole === "admin"
+      ? "/dashboard/admin/projects"
+      : normalizedRole === "employee"
+        ? "/dashboard/employee/projects"
+        : "/dashboard/client/projects"
+
   const navMain = [
     {
       title: "Dashboard",
@@ -39,7 +46,7 @@ export function AppSidebar({
     },
     {
       title: "Projects",
-      url: "/dashboard/projects",
+      url: projectsPath,
       icon: <FolderIcon />,
     },
     {
@@ -153,8 +160,14 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <a href="/dashboard">
-                <CommandIcon className="size-5!" />
-                <span className="text-base font-semibold">Cyberspace Works</span>
+                <img
+                  src="/logo2 copy.png"
+                  alt="Cyberspace Works"
+                  className="size-10 shrink-0 group-data-[collapsible=icon]:mx-auto"
+                />
+                <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
+                  Cyberspace Works
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

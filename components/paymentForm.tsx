@@ -109,6 +109,17 @@ export default function PaymentForm({ open, setOpen, onSuccess, editData }) {
     }
   }, [editData, open])
 
+  // prevent background scroll while modal is open
+  useEffect(() => {
+    if (open) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = "hidden"
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [open])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError("")
@@ -163,17 +174,6 @@ export default function PaymentForm({ open, setOpen, onSuccess, editData }) {
   }
 
   if (!open) return null
-
-  // prevent background scroll while modal is open
-  useEffect(() => {
-    if (open) {
-      const prev = document.body.style.overflow
-      document.body.style.overflow = "hidden"
-      return () => {
-        document.body.style.overflow = prev
-      }
-    }
-  }, [open])
 
   const balance = (Number(form.totalFee) || 0) - (Number(form.amount) || 0)
   const isAmountInvalid =

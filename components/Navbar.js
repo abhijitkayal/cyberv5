@@ -924,94 +924,20 @@ export default function Navbar() {
 
             {/* Left Menu (Desktop) */}
             <ul className="hidden lg:flex space-x-6 font-bold px-8 py-1.5 rounded-xl bg-black/10 border border-white/10 shadow-xl items-center backdrop-blur-sm absolute left-2.5 ml-4 left-menu-container">
-              <li className="relative group">
-                <Link href="/" className={`transition-colors duration-300 ${isActive("/") ? "text-cyan-400" : "hover:text-cyan-400"}`}>
-                  Home
-                </Link>
-                <span className={`absolute left-0 -bottom-1 w-full h-[2px] rounded-full transition-transform duration-300 origin-left ${
-                  isActive("/") ? "bg-cyan-400 scale-x-100" : "bg-gradient-to-r from-cyan-700 via-cyan-400 to-cyan-200 scale-x-0 group-hover:scale-x-100"
-                }`}></span>
-              </li>
-
-              {/* Services dropdown */}
-              <li className="relative group services-dropdown-container"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}>
-
-                <Link
-                  href="/services"
-                  className={`flex items-center gap-1 transition-colors duration-300 ${
-                    pathname.startsWith("/services") ? "text-cyan-400" : "text-white hover:text-cyan-400"
-                  }`}>
-                  Services
-                  <span className="text-xs mt-[2px]">{isServicesOpen ? <FaAngleUp /> : <FaAngleDown />}</span>
-                </Link>
-
-                <span className={`absolute left-0 -bottom-1 w-full h-[2px] rounded-full transition-transform duration-300 origin-left ${
-                  pathname.startsWith("/services")
-                    ? "bg-cyan-400 scale-x-100"
-                    : "bg-gradient-to-r from-cyan-700 via-cyan-400 to-cyan-200 scale-x-0 group-hover:scale-x-100"
-                }`}></span>
-
-                {/* ✅ Dropdown now wider (1000px) to fit 8 services in 4 cols */}
-                <div className={`absolute left-0 w-[1000px] rounded-xl bg-black backdrop-blur-xl border border-white/10 transition-all duration-300 ease-in-out origin-top z-[999] backdrop-filter mt-6 ${
-                  isServicesOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
-                } flex overflow-hidden p-6`}>
-                  <div className="absolute top-0 left-0 w-[300px] h-[300px] -translate-x-32 -translate-y-32 blur-[160px] opacity-60 pointer-events-none"
-                    style={{ background: "radial-gradient(circle, #06b6d4 0%, transparent 100%)" }}></div>
-                  <div className="absolute bottom-0 right-0 w-[300px] h-[300px] translate-x-32 translate-y-32 blur-[160px] opacity-60 pointer-events-none"
-                    style={{ background: "radial-gradient(circle, #6366f1 0%, transparent 100%)" }}></div>
-
-                  {/* ✅ 4 columns to fit all 8 services */}
-                  <div className="grid grid-cols-4 gap-4 w-full">
-                    {services.map((service) => (
-                      <Link key={service.name} href={service.href}
-                        className="flex items-start gap-3 p-3 rounded-lg transition-all duration-300 transform hover:bg-white/10 hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(0,0,0,0.3)]">
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg bg-black/50 border border-white/10 text-xl ${
-                          service.href === "/services/ai-intelligent-systems" ? "text-violet-400" : "text-cyan-400"
-                        }`}>
-                          {service.icon}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white text-sm">{service.name}</p>
-                          <p className="text-gray-400 text-xs">{service.subtext}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </li>
-
-              <li className="relative group">
-                <Link href="/about-us" className={`transition-colors duration-300 ${isActive("/about-us") ? "text-cyan-400" : "hover:text-cyan-400"}`}>
-                  About
-                </Link>
-                <span className={`absolute left-0 -bottom-1 w-full h-[2px] rounded-full transition-transform duration-300 origin-left ${
-                  isActive("/about-us") ? "bg-cyan-400 scale-x-100" : "bg-gradient-to-r from-cyan-700 via-cyan-400 to-cyan-200 scale-x-0 group-hover:scale-x-100"
-                }`}></span>
-              </li>
-
-              <li className="relative group">
-                <Link href="/contact-us" className={`transition-colors duration-300 ${isActive("/contact-us") ? "text-cyan-400" : "hover:text-cyan-400"}`}>
-                  Contact
-                </Link>
-                <span className={`absolute left-0 -bottom-1 w-full h-[2px] rounded-full transition-transform duration-300 origin-left ${
-                  isActive("/contact-us") ? "bg-cyan-400 scale-x-100" : "bg-gradient-to-r from-cyan-700 via-cyan-400 to-cyan-200 scale-x-0 group-hover:scale-x-100"
-                }`}></span>
-              </li>
-
-              {!isAuthenticated && (
-                <li>
-                  <button
-                    type="button"
-                    onClick={openQuoteModal}
-                    className="flex items-center justify-center gap-1 px-4 py-2 text-cyan-100 border border-cyan-500/40 rounded-full transition-all duration-300 hover:bg-cyan-500/10"
-                  >
-                    Quick Enquiry
-                  </button>
-                </li>
-              )}
-              
+              {/* <SparkleNavbar
+  items={[
+    { label: "Home", href: "/" },
+    { label: "About", href: "/about-us" },
+    { label: "Services", href: "/services" },
+    { label: "Contact", href: "/contact-us" },
+  ]}
+  color="#1e90ff"
+  textColor="white"
+/> */}
+<SparkleNavbar 
+items={["home","about","services","contact"]}
+ color="#1e90ff"
+  textColor="white"/>
             </ul>
 
             {/* Right Menu - Social Icons */}

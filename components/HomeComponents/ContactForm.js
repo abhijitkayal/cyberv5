@@ -413,7 +413,7 @@ const ContactSection = () => {
         aria-hidden="true"
         style={{
           background:
-            "radial-gradient(circle at 50% 50%, rgba(14,186,199,0.45), transparent 40%)",
+            "radial-gradient(circle at 60% 50%, rgba(14,186,199,0.45), transparent 40%)",
         }}
       />
 

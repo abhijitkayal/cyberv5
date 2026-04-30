@@ -220,6 +220,7 @@ import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ThemeProvider } from "next-themes";
+import { useTheme } from "next-themes";
 
 const GTM_ID = "GTM-KCNJRZVR";
 
@@ -231,6 +232,7 @@ const rubik = Rubik({
 
 export default function RootLayout({ children }) {
   const [loading, setLoading] = useState(true);
+  const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -304,10 +306,18 @@ export default function RootLayout({ children }) {
         <meta name="twitter:image" content="https://cyberspaceworks.com/logo.png" />
       </head>
 
-      <body
+      {/* <body
         className={`${rubik.variable} antialiased relative min-h-screen bg-background text-foreground`}
         style={{ cursor: "url('/cursor.png') 16 16, default" }}
-      >
+      > */}
+         <body
+  className={`${rubik.variable} antialiased relative min-h-screen bg-background text-foreground`}
+  style={{
+    cursor:
+      resolvedTheme === "dark"
+        ? "url('/cursorblack.png') 16 16, default"
+        : "url('/cursor.png') 16 16, default",
+  }}>
         {/* GTM noscript */}
         <noscript>
           <iframe

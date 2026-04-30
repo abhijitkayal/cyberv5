@@ -619,7 +619,7 @@ import { HomeIcon, Cog6ToothIcon, InformationCircleIcon, PhoneIcon } from "@hero
 import { SiGoogleanalytics } from "react-icons/si";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
+import SparkleNavbar from "./lightswind/sparkle-navbar";
 export default function Navbar() {
   const [isLeftMenuOpen, setIsLeftMenuOpen] = useState(false);
   const [isRightMenuOpen, setIsRightMenuOpen] = useState(false);
@@ -873,6 +873,10 @@ export default function Navbar() {
   return (
     <>
       <header className="w-full fixed top-0 z-50">
+        {/* <SparkleNavbar
+        items={['home',"about","services","contact"]}
+        color="#1e90ff"
+        /> */}
         {/* Neon top strip */}
         <div className="relative h-[10px] bg-cyan-400 lg:block hidden">
           <div className="absolute bottom-0 left-0 w-full h-[4px] bg-cyan-400 shadow-[0_0_15px_#00ffff]">
@@ -1042,7 +1046,7 @@ export default function Navbar() {
                   <p className="text-gray-400 flex items-start gap-2 mt-3">
                     <IoMailOutline className="text-cyan-400 mt-1 size-5" />
                     <a href="mailto:cyberspaceworksofficial@gmail.com" className="hover:underline leading-snug text-center">
-                      cyberspaceworksofficial@gmail.com
+                      cyberspaceworksofficial@<br/>gmail.com
                     </a>
                   </p>
                   <p className="text-gray-400 flex items-start gap-2 mt-3">
@@ -1347,3 +1351,5 @@ export default function Navbar() {
     </>
   );
 }
+
+

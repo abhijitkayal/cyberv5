@@ -6,6 +6,8 @@ import Link from "next/link";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import OurServices from "@/components/HomeComponents/OurServices.js"; 
+import { Meteors } from "../ui/meteors";
+import InteractiveHoverButton  from "../ui/interactive-hover-button/InteractiveHoverButton.tsx";
 
 export default function HomePage() {
   const servicesRef = useRef(null);
@@ -79,13 +81,13 @@ function updateStars() {
   });
 }
 
-      function animate() {
-        drawStars();
-        updateStars();
-        requestAnimationFrame(animate);
-      }
+      // function animate() {
+      //   drawStars();
+      //   updateStars();
+      //   requestAnimationFrame(animate);
+      // }
 
-      animate();
+      // animate();
 
       const handleResize = () => {
         canvas.width = window.innerWidth;
@@ -96,7 +98,10 @@ function updateStars() {
     }, []);
 
     return (
+      <>
+      <Meteors/>
       <div className="relative w-full h-screen text-white overflow-hidden">
+        
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0" />
          <main className="relative z-10 flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center px-4 lg:pt-30 pt-3">
       <motion.div
@@ -123,15 +128,12 @@ function updateStars() {
         </p>
 
         <div className="mt-6 flex gap-4 justify-center">
-          <ContactButton href="/contact-us">
-            <div className="wrap">
-              <p>
-                <span>✧</span>
-                <span>✦</span>
-                Contact Us
-              </p>
-            </div>
+          <ContactButton href="/contact-us" className="mt-1">
+            {/* <div className="wrap"> */}
+             <InteractiveHoverButton/>
+            {/* </div> */}
           </ContactButton>
+          
 
           <div className="mt-4">
             <AboutButton href="/about-us">About Us</AboutButton>
@@ -147,6 +149,7 @@ function updateStars() {
           <FaAngleDown className="text-cyan-400 text-4xl animate-bounce" />
         </div>
       </div>
+      </>
     );
   };
 

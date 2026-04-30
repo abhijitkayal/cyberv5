@@ -923,7 +923,7 @@ export default function Navbar() {
             </div>
 
             {/* Left Menu (Desktop) */}
-            <ul className="hidden lg:flex space-x-6 font-bold px-8 py-1.5 rounded-xl bg-black/10 border border-white/10 shadow-xl items-center backdrop-blur-sm absolute left-2.5 ml-4 left-menu-container">
+            <ul className="hidden lg:flex  font-bold px-4  rounded-xl bg-black/10 border border-white/10 shadow-xl items-center backdrop-blur-sm absolute left-2.5 ml-4 left-menu-container">
               {/* <SparkleNavbar
   items={[
     { label: "Home", href: "/" },
@@ -935,8 +935,13 @@ export default function Navbar() {
   textColor="white"
 /> */}
 <SparkleNavbar 
-items={["home","about","services","contact"]}
- color="#1e90ff"
+items={[
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about-us" },
+  { label: "Services", href: "/services" },
+  { label: "Contact", href: "/contact-us" },
+]}
+ color="#00BCD4"
   textColor="white"/>
             </ul>
 

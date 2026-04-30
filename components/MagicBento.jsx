@@ -7,6 +7,7 @@ import { AnimatedBeam } from '../components/ui/animated-beam';
 import { cn } from '../lib/utils';
 import { GlowingStarsBackgroundCard } from './ui/glowing-stars';
 import { Globe } from './ui/globe';
+import AnimatedBeamMultipleOutputDemo from './animated-beam-multiple-inputs';
 
 const DEFAULT_PARTICLE_COUNT = 12;
 const DEFAULT_SPOTLIGHT_RADIUS = 300;
@@ -28,7 +29,7 @@ const createParticleElement = (x, y, color = DEFAULT_GLOW_COLOR) => {
   el.style.cssText = `
     position: absolute; width: 4px; height: 4px; border-radius: 50%;
     background: rgba(${color}, 1); box-shadow: 0 0 6px rgba(${color}, 0.6);
-    pointer-events: none; z-index: 100; left: ${x}px; top: ${y}px;
+    pointer-events: none; z-index: 300; left: ${x}px; top: ${y}px;
   `;
   return el;
 };
@@ -492,19 +493,22 @@ const BackgroundBeamsBackground = () => (
 // ─────────────────────────────────────────────────────────────────────────────
 const CardContent = ({ card, isFirst, isThird, isFourth, isFifth,isSixth }) => (
   <>
+    {/* Render animated backgrounds after children so particles are above */}
+    <div style={{ position: 'relative', zIndex: 2 }}>
+      <div className="magic-bento-card__header" style={{ position: 'relative', zIndex: 2 }}>
+        <div className="magic-bento-card__label">{card.label}</div>
+      </div>
+      <div className="magic-bento-card__content" style={{ position: 'relative', zIndex: 2 }}>
+        <h2 className="magic-bento-card__title">{card.title}</h2>
+        <p className="magic-bento-card__description">{card.description}</p>
+      </div>
+    </div>
+    {/* Backgrounds rendered after content so particles are above */}
     {isFirst  && <DotFieldBackground />}
     {isThird  && <BackgroundBeamsBackground />}
-    {isFourth && <AnimatedBeamBackground />}
+    {isFourth && <AnimatedBeamMultipleOutputDemo />}
     {isFifth  && <GlowingStarsBackgroundCard />}
     {isSixth && <Globe/>}
-
-    <div className="magic-bento-card__header" style={{ position: 'relative', zIndex: 1 }}>
-      <div className="magic-bento-card__label">{card.label}</div>
-    </div>
-    <div className="magic-bento-card__content" style={{ position: 'relative', zIndex: 1 }}>
-      <h2 className="magic-bento-card__title">{card.title}</h2>
-      <p className="magic-bento-card__description">{card.description}</p>
-    </div>
   </>
 );
 
